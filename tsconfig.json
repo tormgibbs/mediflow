@@ -11,7 +11,7 @@
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    // "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "isolatedModules": true,

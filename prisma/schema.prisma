@@ -12,3 +12,101 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  PATIENT
+  DOCTOR
+}
+
+enum ActionType {
+  CHECKLIST
+  PLAN
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+  CANCELED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(PATIENT)
+  password  String
+  createdAt DateTime @default(now())
+  patient   Patient?
+  doctor    Doctor?
+}
+
+model Doctor {
+  id       String       @id @default(uuid())
+  userId   String       @unique
+  patients Patient[]
+  notes    DoctorNote[]
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Patient {
+  id       String       @id @default(uuid())
+  userId   String       @unique
+  doctorId String?
+  notes    DoctorNote[]
+
+  user           User             @relation(fields: [userId], references: [id])
+  doctor         Doctor?          @relation(fields: [doctorId], references: [id])
+  ActionableStep ActionableStep[]
+  Reminder       Reminder[]
+}
+
+model DoctorNote {
+  id        String @id @default(uuid())
+  patientId String
+  doctorId  String
+  content   String
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  doctor  Doctor  @relation(fields: [doctorId], references: [id])
+}
+
+model ActionableStep {
+  id        String   @id @default(uuid())
+  patientId String // One active action plan per patient
+  checklist String[] // List of immediate tasks
+  plan      Json // JSON object with scheduled tasks
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // description String
+  // dueDate     DateTime?
+  // noteId      String
+
+  status Status @default(PENDING)
+  // assignedTo String
+
+  // note     DoctorNote? @relation(fields: [noteId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
+}
+
+// model ActionableStep {
+//   id          String    @id @default(uuid())
+//   description String
+//   dueDate     DateTime?
+//   noteId      String
+
+//   status     Status @default(PENDING)
+//   assignedTo String
+
+//   note     DoctorNote? @relation(fields: [noteId], references: [id])
+//   assignee User        @relation(fields: [assignedTo], references: [id])
+// }
+
+model Reminder {
+  id        String @id @default(uuid())
+  patientId String
+  task      String
+  status    Status @default(PENDING)
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
